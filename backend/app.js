@@ -28,7 +28,23 @@ app.use(passport.initialize());
 
 if (!isProduction) {
   app.use(cors());
-} else {  // production
+}
+
+app.use(
+  csurf({
+    cookie: {
+      secure: isProduction,
+      sameSite: isProduction && "Lax",
+      httpOnly: true
+    }
+  })
+);
+
+app.use('/api/users', usersRouter);
+app.use('/api/tweets', tweetsRouter);
+app.use('/api/csrf', csrfRouter);
+
+if (isProduction) {
   const path = require('path');
   app.get('/', (req, res) => {
     res.cookie('CSRF-TOKEN', req.csrfToken());
@@ -46,20 +62,6 @@ if (!isProduction) {
     );
   });
 }
-
-app.use(
-  csurf({
-    cookie: {
-      secure: isProduction,
-      sameSite: isProduction && "Lax",
-      httpOnly: true
-    }
-  })
-);
-
-app.use('/api/users', usersRouter);
-app.use('/api/tweets', tweetsRouter);
-app.use('/api/csrf', csrfRouter);
 
 app.use((req, res, next) => {
   const err = new Error('Not Found');
